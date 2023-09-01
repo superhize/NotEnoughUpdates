@@ -739,6 +739,15 @@ public class Mining {
 
 	@Expose
 	@ConfigOption(
+		name = "NES Waypoints",
+		desc = "Automatically create Nes waypoints for well-known targets"
+	)
+	@ConfigAccordionId(id = 7)
+	@ConfigEditorBoolean
+	public boolean wishingCompassAutocreateKnownWaypointsNes = false;
+
+	@Expose
+	@ConfigOption(
 		name = "Waypoint Names",
 		desc = "NOTE: Skytils overwrites waypoint coordinates with less accurate values for Skytils names."
 	)

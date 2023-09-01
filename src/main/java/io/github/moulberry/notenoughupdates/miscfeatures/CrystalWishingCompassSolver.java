@@ -104,6 +104,7 @@ public class CrystalWishingCompassSolver {
 
 	private static final Minecraft mc = Minecraft.getMinecraft();
 	private static boolean isSkytilsPresent = false;
+	private static boolean isNesPresent = false;
 	private static final ArrayDeque<ParticleData> seenParticles = new ArrayDeque<>();
 
 	// There is a small set of breakable blocks above the nucleus at Y > 181. While this zone is reported
@@ -204,6 +205,7 @@ public class CrystalWishingCompassSolver {
 	public void onWorldLoad(WorldEvent.Unload event) {
 		initWorld();
 		isSkytilsPresent = Loader.isModLoaded("skytils");
+		isNesPresent = Loader.isModLoaded("nes");
 	}
 
 	@SubscribeEvent
@@ -749,6 +751,11 @@ public class CrystalWishingCompassSolver {
 			String.format("%.0f %.0f %.0f", solution.xCoord, solution.yCoord, solution.zCoord);
 	}
 
+	private Double[] getSolutionCoordsTextSplit() {
+		return solution == null ? new Double[]{0.0, 0.0, 0.0} :
+			new Double[]{solution.xCoord, solution.yCoord, solution.zCoord};
+	}
+
 	private String getWishingCompassDestinationsMessage() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(EnumChatFormatting.YELLOW);
@@ -780,16 +787,53 @@ public class CrystalWishingCompassSolver {
 		if (solution == null) return;
 
 		if (NUCLEUS_BB.isVecInside(solution)) {
-			Utils.addChatMessage(EnumChatFormatting.YELLOW + "[NEU] " + EnumChatFormatting.AQUA + "Wishing compass target is the Crystal Nucleus");
+			Utils.addChatMessage(EnumChatFormatting.YELLOW + "[NEU] " + EnumChatFormatting.AQUA +
+				"Wishing compass target is the Crystal Nucleus");
 			return;
 		}
 
 		String destinationMessage = getWishingCompassDestinationsMessage();
 
+		if (!isNesPresent) {
+			Utils.addChatMessage(destinationMessage);
+			return;
+		}
+
 		if (!isSkytilsPresent) {
 			Utils.addChatMessage(destinationMessage);
 			return;
 		}
+
+		String targetNameForNes = solutionPossibleTargets.size() == 1 ?
+			getNameForCompassTarget(solutionPossibleTargets.iterator().next()) :
+			"WishingTarget";
+		String nescommand = String.format(
+			"/neswaypoint add %s %s %s %s %s",
+			getSolutionCoordsTextSplit()[0],
+			getSolutionCoordsTextSplit()[1],
+			getSolutionCoordsTextSplit()[2],
+			targetNameForNes,
+			"compass"
+		);
+		if (NotEnoughUpdates.INSTANCE.config.mining.wishingCompassAutocreateKnownWaypointsNes &&
+			solutionPossibleTargets.size() == 1) {
+			Utils.addChatMessage(destinationMessage);
+			int commandResult = ClientCommandHandler.instance.executeCommand(mc.thePlayer, nescommand);
+			if (commandResult == 1) {
+				return;
+			}
+			Utils.addChatMessage(
+				EnumChatFormatting.RED + "[NEU] Failed to automatically run /neswaypoint");
+		}
+
+		destinationMessage += EnumChatFormatting.YELLOW + " [Add NES Waypoint]";
+		ChatComponentText chatMessage = new ChatComponentText(destinationMessage);
+		chatMessage.setChatStyle(Utils.createClickStyle(
+			ClickEvent.Action.RUN_COMMAND,
+			nescommand,
+			EnumChatFormatting.YELLOW + "Set waypoint for wishing target"
+		));
+		mc.thePlayer.addChatMessage(chatMessage);
 
 		String targetNameForSkytils = solutionPossibleTargets.size() == 1 ?
 			getNameForCompassTarget(solutionPossibleTargets.iterator().next()) :
