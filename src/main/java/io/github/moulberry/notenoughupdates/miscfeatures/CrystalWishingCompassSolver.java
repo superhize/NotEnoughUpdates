@@ -851,13 +851,13 @@ public class CrystalWishingCompassSolver {
 		}
 
 		destinationMessage += EnumChatFormatting.YELLOW + " [Add Skytils Waypoint]";
-		ChatComponentText chatMessage = new ChatComponentText(destinationMessage);
+		ChatComponentText chatMessage2 = new ChatComponentText(destinationMessage);
 		chatMessage.setChatStyle(Utils.createClickStyle(
 			ClickEvent.Action.RUN_COMMAND,
 			skytilsCommand,
 			EnumChatFormatting.YELLOW + "Set waypoint for wishing target"
 		));
-		mc.thePlayer.addChatMessage(chatMessage);
+		mc.thePlayer.addChatMessage(chatMessage2);
 	}
 
 	private String getDiagnosticMessage() {
